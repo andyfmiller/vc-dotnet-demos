@@ -1,0 +1,78 @@
+@page
+@using VerifierApp.Pages.Shared
+@model CreateModel
+
+@{
+    ViewData["Title"] = "Create New Requirement";
+    ViewData["ActivePage"] = NavPages.AdminRequirements;
+}
+
+@if (!string.IsNullOrEmpty(ViewData["Message"]?.ToString()))
+{
+    <div class="alert alert-success">
+        @ViewData["Message"]
+    </div>
+}
+
+@if (!ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+}
+
+<form method="post" class="card shadow mt-3">
+    <div class="card-header d-flex align-items-center shadow">
+        <div class="text-size-large me-auto">
+            @ViewData["Title"]
+        </div>
+        <button type="submit" asp-page-handler="" class="btn btn-sm btn-dark mx-3 text-nowrap">
+            <i class="fas fa-save"></i>
+            <span class="d-none d-sm-inline text-uppercase">Save</span>
+        </button>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+            <div class="col-xl-6">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Requirement.Name" class="input-group-text"></label>
+                        <input asp-for="Requirement.Name" class="form-control" placeholder="Enter the requirement name" />
+                        <span class="input-group-text">
+                            <description asp-for="Requirement.Name"></description>
+                        </span>
+                    </div>
+                    <span asp-validation-for="Requirement.Name" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-xl-6">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Requirement.AchievementType" class="input-group-text"></label>
+                        <select asp-for="Requirement.AchievementType" asp-items="@Model.AchievementTypes" class="form-select">
+                            <option value="">Select the achievement type</option>
+                        </select>
+                        <span class="input-group-text">
+                            <description asp-for="Requirement.AchievementType"></description>
+                        </span>
+                    </div>
+                    <span asp-validation-for="Requirement.AchievementType" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-xl-12">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Requirement.Reason" class="input-group-text"></label>
+                        <input asp-for="Requirement.Reason" class="form-control" placeholder="Enter the reason for the requirement" />
+                        <span class="input-group-text">
+                            <description asp-for="Requirement.Reason"></description>
+                        </span>
+                    </div>
+                    <span asp-validation-for="Requirement.Reason" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

@@ -1,0 +1,235 @@
+@using IssuerApp.Data
+@using IssuerApp.Data.Models
+@using IssuerApp.Data.Models.OpenBadges
+@using IssuerApp.Extensions
+@using IssuerApp.Pages.Shared
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+
+@inject ApplicationDbContext _dbContext
+@inject UserManager<ApplicationUser> _userManager
+
+@{
+    var user = await _userManager.GetUserAsync(User);
+
+    var organizations = await _dbContext.Organizations
+        .Include(x => x.Profile)
+        .AsNoTracking()
+        .ToListAsync();
+
+    var members = await _dbContext.Members
+        .Include(x => x.Organization)
+        .AsNoTracking()
+        .ToListAsync();
+
+    var achievements = await _dbContext.Achievements
+        .Include(x => x.Organization)
+        .AsNoTracking()
+        .ToListAsync();
+
+    var achievementCredentials = await _dbContext.AchievementCredentials
+        .Include(x => x.Organization)
+        .Include(x => x.CredentialSubject)
+        .ThenInclude(x => x!.Achievement)
+        .Include(x => x.CredentialSubject)
+        .ThenInclude(x => x!.Member)
+        .AsNoTracking()
+        .ToListAsync();
+}
+
+<div class="row row-cols-1 row-cols-lg-2 g-4 pt-3">
+
+    @* Organizations *@
+
+    <div class="col">
+        <div class="card shadow">
+            <a class="card-header btn btn-light d-flex flex-grow-1 align-items-center" asp-page="Admin/Organizations/Index">
+                <i class="fa-solid fa-university" style="font-size: 2em"></i>
+                <div class="flex-grow-1">
+                    @{
+                        var orgCount = organizations.Count;
+                    }
+                    There are
+                    <span class="fw-bold">@orgCount</span>
+                    @(orgCount == 1 ? "Organization" : "Organizations")
+                </div>
+            </a>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    @foreach (var organization in organizations.Take(3))
+                    {
+                        <li id="organization-@organization.OrganizationKey" class="list-group-item px-0">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1 min-w-0">
+                                    <a asp-page="Admin/Organizations/Edit" asp-route-key="@organization.OrganizationKey">
+                                        @organization.DisplayName
+                                    </a>
+                                </div>
+                                <partial name="Admin/Organizations/_ContextMenuPartial" model="organization" />
+                            </div>
+                        </li>
+                    }
+                    @if (organizations.Count > 3)
+                    {
+                        <li class="list-group-item">
+                            <a asp-page="Admin/Organizations/Index">See more...</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    @* Members *@
+
+    <div class="col">
+        <div class="card shadow">
+            <a class="card-header btn btn-light d-flex flex-grow-1 align-items-center" asp-page="Admin/Members/Index">
+                <i class="fa-solid fa-person" style="font-size: 2em"></i>
+                <div class="flex-grow-1">
+                    @{
+                        var memberCount = members.Count;
+                    }
+                    @(memberCount == 1 ? "There is" : "There are")
+                    <span class="fw-bold">@memberCount</span>
+                    @(memberCount == 1 ? "Member" : "Members")
+                </div>
+            </a>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    @foreach (var member in members.Take(3))
+                    {
+                        <li id="member-@member.MemberKey" class="list-group-item px-0">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1 min-w-0">
+                                    <a asp-page="Admin/Members/Edit" asp-route-key="@member.MemberKey">
+                                        @member.Name
+                                    </a>
+                                    <div class="text-size-small d-flex">
+                                        <div class="me-2">
+                                            <span class="fw-bold">Organization:</span>
+                                            @(member.Organization?.DisplayName ?? "n/a")
+                                        </div>
+                                    </div>
+                                </div>
+                                <partial name="Admin/Members/_ContextMenuPartial" model="member" />
+                            </div>
+                        </li>
+                    }
+                    @if (members.Count > 3)
+                    {
+                        <li class="list-group-item">
+                            <a asp-page="Admin/Members/Index">See more...</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    @* Achievements *@
+
+    <div class="col">
+        <div class="card shadow">
+            <a class="card-header btn btn-light d-flex flex-grow-1 align-items-center" asp-page="Admin/Achievements/Index">
+                <i class="fa-solid fa-list-check" style="font-size: 2em"></i>
+                <div class="flex-grow-1">
+                    @(achievements.Count == 1 ? "There is" : "There are")
+                    <span class="fw-bold">@achievements.Count</span>
+                    @(achievements.Count == 1 ? "Achievement" : "Achievements")
+                </div>
+            </a>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    @foreach (var achievement in achievements.Take(3))
+                    {
+                        <li id="achievement-@achievement.AchievementKey" class="list-group-item px-0">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1 min-w-0">
+                                    <a asp-page="Admin/Achievements/Edit" asp-route-key="@achievement.AchievementKey">
+                                        @achievement.DisplayName
+                                    </a>
+                                    <div class="text-size-small d-flex">
+                                        <div class="me-2">
+                                            <span class="fw-bold">Organization:</span>
+                                            @(achievement.Organization?.DisplayName ?? "n/a")
+                                        </div>
+                                        <div class="me-2">
+                                            <span class="fw-bold">Type:</span>
+                                            @(achievement.AchievementType?.Type ?? "n/a")
+                                        </div>
+                                    </div>
+                                </div>
+                                <partial name="Admin/Achievements/_ContextMenuPartial" model="achievement" view-data="@ViewData" />
+                            </div>
+                        </li>
+                    }
+                    @if (achievements.Count > 3)
+                    {
+                        <li class="list-group-item">
+                            <a asp-page="Admin/Achievements/Index">See more...</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    @* Achievement Credentials *@
+
+    <div class="col">
+        <div class="card shadow">
+            <a class="card-header btn btn-light d-flex flex-grow-1 align-items-center" asp-page="Admin/AchievementCredentials/Index">
+                <i class="fa-regular fa-id-card" style="font-size: 2em"></i>
+                <div class="flex-grow-1">
+                    @(achievementCredentials.Count == 1 ? "There is" : "There are")
+                    <span class="fw-bold">@achievementCredentials.Count</span>
+                    @(achievementCredentials.Count == 1 ? "Credential" : "Credentials")
+                </div>
+            </a>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    @foreach (var credential in achievementCredentials.Take(3))
+                    {
+                        var achievement = credential.CredentialSubject?.Achievement;
+                        <li id="credential-@credential.AchievementCredentialKey" class="list-group-item px-0">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1 min-w-0">
+                                    <a asp-page="Admin/AchievementCredentials/Edit" asp-route-key="@credential.AchievementCredentialKey">
+                                        @(achievement?.DisplayName ?? "Unnamed Achievement")
+                                    </a>
+                                    <div class="text-size-small d-flex">
+                                        <div class="me-2">
+                                            <span class="fw-bold">Organization:</span>
+                                            @(credential.Organization?.DisplayName ?? "n/a")
+                                        </div>
+                                        <div class="me-2">
+                                            <span class="fw-bold">Type:</span>
+                                            @(achievement?.AchievementType?.Type ?? "n/a")
+                                        </div>
+                                        <div class="me-2">
+                                            <span class="fw-bold">Valid From:</span>
+                                            @Html.DisplayFor(x => credential.ValidFrom)
+                                        </div>
+                                        <div class="me-2">
+                                            <span class="fw-bold">Issued To:</span>
+                                            @(credential.CredentialSubject?.Member?.Name ?? "n/a")
+                                        </div>
+                                    </div>
+                                </div>
+                                <partial name="Admin/AchievementCredentials/_ContextMenuPartial" model="credential" view-data="@ViewData" />
+                            </div>
+                        </li>
+                        @if (achievementCredentials.Count > 3)
+                        {
+                            <li class="list-group-item">
+                                <a asp-page="Admin/AchievementCredentials/Index">See more...</a>
+                            </li>
+                        }
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</div>

@@ -1,0 +1,31 @@
+@using VerifierApp.Data.Models
+@model CredentialRequirement
+
+<button type="button" class="btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#deleteConfirmation">
+    <i class="fas fa-trash-alt"></i>
+    <span class="d-none d-sm-inline text-uppercase">Delete</span>
+</button>
+<div class="modal fade" id="deleteConfirmation" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete @Model.Name</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    Are you sure you want to delete this requirement?
+                </p>
+                <button type="submit" asp-page-handler="DeleteRequirement" asp-route-key="@Model.CredentialRequirementKey"
+                        asp-route-pagename="Index" class="btn btn-sm btn-danger text-uppercase">
+                    Delete
+                </button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary text-uppercase" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

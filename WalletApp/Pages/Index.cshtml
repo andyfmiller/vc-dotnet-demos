@@ -1,0 +1,17 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div asp-validation-summary="All" class="alert alert-danger mt-2"></div>
+
+@if (User.Identity is not { IsAuthenticated: true })
+{
+    <div class="text-center">
+        <h1 class="display-4">Welcome</h1>
+        <p>This app is the Wallet sample app. <a asp-page="./Login">Login</a> to get started.</p>
+    </div>
+
+    return;
+}

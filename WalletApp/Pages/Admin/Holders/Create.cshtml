@@ -1,0 +1,61 @@
+@page
+@using WalletApp.Pages.Shared
+@model CreateModel
+
+@{
+    ViewData["Title"] = "Create New Holder";
+    ViewData["ActivePage"] = NavPages.Holders;
+}
+
+@if (!string.IsNullOrEmpty(ViewData["Message"]?.ToString()))
+{
+    <div class="alert alert-success">
+        @ViewData["Message"]
+    </div>
+}
+
+@if (!ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+}
+
+<form method="post" class="card shadow mt-3">
+    <input type="hidden" asp-for="Holder.SigningPrivateKeyBase64" />
+    <input type="hidden" asp-for="Holder.SigningPublicKeyMultibase" />
+    <div class="card-header d-flex align-items-center shadow">
+        <div class="text-size-large me-auto">
+            @ViewData["Title"]
+        </div>
+        <button type="submit" asp-page-handler="" class="btn btn-sm btn-dark mx-3 text-nowrap">
+            <i class="fas fa-save"></i>
+            <span class="d-none d-sm-inline text-uppercase">Save</span>
+        </button>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+            <div class="col-xl-4">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Holder.Id" class="input-group-text"></label>
+                        <input asp-for="Holder.Id" readonly="readonly" class="form-control" data-lpignore="true" />
+                    </div>
+                    <span asp-validation-for="Holder.Id" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-xl-4">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Holder.Name" class="input-group-text"></label>
+                        <input asp-for="Holder.Name" class="form-control" placeholder="Enter Holder Name" />
+                    </div>
+                    <span asp-validation-for="Holder.Name" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</form>

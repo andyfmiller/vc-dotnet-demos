@@ -1,0 +1,70 @@
+@* _VcPropertyTree.cshtml
+   Recursive partial that renders a JsonNode as an indented property tree.
+   Each level is a <dl> with dt (key) and dd (value), where object/array values
+   recurse into a nested <dl> rather than printing raw JSON.
+
+   Usage:  @await Html.PartialAsync("_VcPropertyTree", someJsonNode)
+*@
+@using System.Text.Json.Nodes
+@model JsonNode?
+
+@{
+    // Human-readable label: convert camelCase / snake_case / @-prefixed
+    // keys to "Title Case With Spaces".
+    static string Label(string key)
+    {
+        if (key.StartsWith('@')) key = key[1..];
+
+        // Insert a space before each uppercase letter that follows a lowercase
+        // letter (camelCase split).
+        var result = System.Text.RegularExpressions.Regex.Replace(key, @"([a-z])([A-Z])", "$1 $2");
+
+        // Replace underscores / hyphens with spaces.
+        result = result.Replace('_', ' ').Replace('-', ' ');
+
+        // Title-case the whole thing.
+        return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(result);
+    }
+}
+
+@if (Model is JsonObject obj)
+{
+    <dl class="mb-0">
+        @foreach (var prop in obj)
+        {
+            <dt style="font-weight:600; padding-top:2px;">@Label(prop.Key)</dt>
+            <dd style="margin-left:1.5rem; margin-bottom:4px;">
+                @if (prop.Value is JsonObject || prop.Value is JsonArray)
+                {
+                    @await Html.PartialAsync("_VcPropertyTree", prop.Value)
+                }
+                else
+                {
+                    @(prop.Value?.GetValue<string?>() ?? prop.Value?.ToJsonString() ?? "")
+                }
+            </dd>
+        }
+    </dl>
+}
+else if (Model is JsonArray arr)
+{
+    @if (arr.All(n => n is not JsonObject && n is not JsonArray))
+    {
+        @* Flat array of scalars — render inline *@
+        <span>@string.Join(", ", arr.Select(n => n?.GetValue<string?>() ?? n?.ToJsonString() ?? ""))</span>
+    }
+    else
+    {
+        @* Array of objects/arrays — render each item as a block *@
+        @foreach (var item in arr)
+        {
+            <div style="margin-bottom:4px;">
+                @await Html.PartialAsync("_VcPropertyTree", item)
+            </div>
+        }
+    }
+}
+else
+{
+    @(Model?.GetValue<string?>() ?? Model?.ToJsonString() ?? "")
+}

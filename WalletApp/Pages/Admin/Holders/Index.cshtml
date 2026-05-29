@@ -1,0 +1,65 @@
+@page
+@using WalletApp.Data.Models
+@using WalletApp.Pages.Shared
+@model IndexModel
+
+@{
+    ViewData["Title"] = NavPages.Holders;
+    ViewData["ActivePage"] = NavPages.Holders;
+}
+
+@if (!string.IsNullOrEmpty(ViewData["Message"]?.ToString()))
+{
+    <div class="alert alert-success">
+        @ViewData["Message"]
+    </div>
+}
+
+@if (!ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+}
+
+<div class="card shadow mt-3">
+    <div class="card-header d-flex align-items-center shadow">
+        <div class="card-header-icon">
+            <i class="fas fa-users me-2" style="font-size: 1.5em"></i>
+        </div>
+
+        <div class="text-size-large me-auto">
+            @NavPages.Holders
+        </div>
+
+        <a asp-page="Create" class="btn btn-sm btn-dark mx-2 text-nowrap"
+               aria-label="Create a new holder"
+               title="Create a new holder" data-bs-toggle="tooltip">
+            <i class="fas fa-plus"></i>
+            <span class="d-none d-lg-inline text-uppercase">Create New</span>
+        </a>
+    </div>
+    <div class="card-body">
+            @if (Model.Holders.Count == 0)
+            {
+                <p>No holders yet.</p>
+            }
+            <ul id="holders-list" class="list-group list-group-flush">
+                @foreach (var holder in Model.Holders)
+                {
+                    <li id="holder-@holder.HolderKey" class="list-group-item px-0 d-flex align-items-center"
+                        data-text="@holder.Name">
+                        <div class="flex-grow-1 me-2">
+                            <a asp-page="Edit" asp-route-key="@holder.HolderKey">
+                                @holder.Name
+                            </a>
+                            <div class="text-size-small text-muted">
+                                @holder.Id
+                            </div>
+                        </div>
+                        <partial name="Holders/_ContextMenuPartial" model="holder" view-data="ViewData" />
+                    </li>
+                }
+            </ul>
+    </div>
+</div>

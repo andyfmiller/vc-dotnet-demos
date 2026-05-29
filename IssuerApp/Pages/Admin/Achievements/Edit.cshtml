@@ -1,0 +1,246 @@
+@page
+@using IssuerApp.Data
+@using IssuerApp.Helpers
+@using IssuerApp.Pages.Shared
+@using IssuerApp.Data.Models.OpenBadges
+@using IssuerApp.Pages.Admin.Achievements
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model EditModel
+
+@{
+    ViewData["Title"] = "Edit Achievement";
+    ViewData["ActivePage"] = NavPages.Achievements;
+}
+
+@if (!string.IsNullOrEmpty(ViewData["Message"]?.ToString()))
+{
+    <div class="alert alert-success">
+        @ViewData["Message"]
+    </div>
+}
+
+@if (!ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+}
+
+<form method="post" enctype="multipart/form-data" class="card">
+    <input type="hidden" asp-for="Achievement.AchievementKey" />
+
+    <div class="card-header d-flex align-items-center shadow">
+        <div class="text-size-large me-auto">
+            Edit Achievement
+        </div>
+        <a asp-page="../AchievementCredentials/Create" asp-route-achievementKey="@Model.Achievement?.AchievementKey"
+               class="btn btn-sm btn-dark mx-3 text-nowrap"
+               rel="tooltip" title="Issue this achievement to a member">
+            <i class="far fa-id-card"></i>
+            <span class="d-none d-lg-inline text-uppercase">Issue</span>
+        </a>
+        <button type="submit" asp-page-handler="" class="btn btn-sm btn-dark me-3 text-nowrap"
+                rel="tooltip" title="Save">
+            <i class="fas fa-save"></i>
+            <span class="d-none d-lg-inline text-uppercase">Save</span>
+        </button>
+        <partial name="Achievements/_DeleteButtonPartial" model="Model" />
+    </div>
+
+    <div class="card-body">
+        <div class="row">
+            <div class="col-xl-4">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Achievement.Id" class="input-group-text"></label>
+                        <input asp-for="Achievement.Id" class="form-control"
+                               data-lpignore="true" />
+                        <span class="input-group-text">
+                            <description asp-for="Achievement.Id"></description>
+                        </span>
+                    </div>
+                    <span asp-validation-for="Achievement.Id"></span>
+                </div>
+            </div>
+            <div class="col-xl-4">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Achievement.Name" class="input-group-text"></label>
+                        <input asp-for="Achievement.Name" class="form-control"
+                               data-lpignore="true" />
+                        <span class="input-group-text">
+                            <description asp-for="Achievement.Name"></description>
+                        </span>
+                    </div>
+                    <span asp-validation-for="Achievement.Name"></span>
+                </div>
+            </div>
+            <div class="col-xl-4">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Achievement.Organization" class="input-group-text"></label>
+                        <input class="form-control" type="text" readonly disabled value="@(Model.Achievement?.Organization?.DisplayName)" />
+                        <span class="input-group-text">
+                            <description asp-for="Achievement.Organization"></description>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-12">
+                <div class="mb-2">
+                    <input type="hidden" asp-for="Achievement.Criteria.CriteriaKey" />
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Achievement.Criteria" class="input-group-text"></label>
+                        <textarea asp-for="Achievement.Criteria.Narrative" class="form-control"></textarea>
+                        <span class="input-group-text"><description asp-for="Achievement.Criteria.Narrative"></description></span>
+                    </div>
+                    <span asp-validation-for="Achievement.Criteria.Narrative" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-xl-12">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Achievement.Description" class="input-group-text"></label>
+                        <textarea asp-for="Achievement.Description" class="form-control"></textarea>
+                        <span class="input-group-text"><description asp-for="Achievement.Description"></description></span>
+                    </div>
+                    <span asp-validation-for="Achievement.Description" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <h5 class="section-title">Optional Details</h5>
+
+        <div class="row">
+            <div class="col-xl-4">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Achievement.AchievementType" class="input-group-text"></label>
+                        <select asp-for="Achievement.AchievementType.Type"
+                                asp-items="@Model.AchievementTypes"
+                                class="form-select">
+                            <option value="">Select Achievement Type</option>
+                        </select>
+                        <span class="input-group-text">
+                            <description asp-for="Achievement.AchievementType"></description>
+                        </span>
+                    </div>
+                    <span asp-validation-for="Achievement.AchievementType" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-xl-8">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="ImageId" class="input-group-text"></label>
+                        @if (!string.IsNullOrEmpty(Model.ImageId))
+                        {
+                            <div class="input-group-text">
+                                @if (Model.ImageId.StartsWith("data:"))
+                                {
+                                    <a href="#" onclick="exportToView('@Model.ImageId')">Preview</a>
+                                }
+                                else
+                                {
+                                    <a href="@Model.ImageId" target="_blank">Preview</a>
+                                }
+                            </div>
+                        }
+                        <input asp-for="ImageId" class="form-control" placeholder="Enter URL or upload file" />
+                        <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#upload">Upload Image</button>
+                        <div class="input-group-text">
+                            <description asp-for="ImageId">
+                                An image representing the achievement.
+                            </description>
+                        </div>
+                    </div>
+                    <span asp-validation-for="ImageId" class="text-danger"></span>
+                </div>
+
+                <div class="modal fade" id="upload" tabindex="-1" aria-labelledby="uploadLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="uploadLabel">Upload Image File</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="hidden" asp-for="Achievement.AchievementKey" />
+                                <div class="mb-3">
+                                    <label asp-for="ImageFile" class="form-label">Choose an image that represents the organization</label>
+                                    <input asp-for="ImageFile" type="file" class="form-control" accept="image/png,image/jpeg,image/gif,image/svg+xml" />
+                                    <span asp-validation-for="ImageFile" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button id="upload-image-btn" type="submit" class="btn btn-dark" disabled
+                                        asp-page-handler="UploadImage">
+                                    Upload Image
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Achievement.HumanCode" class="input-group-text"></label>
+                        <input asp-for="Achievement.HumanCode" class="form-control" />
+                        <span class="input-group-text">
+                            <description asp-for="Achievement.HumanCode"></description>
+                        </span>
+                    </div>
+                    <span asp-validation-for="Achievement.HumanCode" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-xl-4">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Achievement.CreditsAvailable" class="input-group-text"></label>
+                        <input type="number" asp-for="Achievement.CreditsAvailable" class="form-control" />
+                        <span class="input-group-text">
+                            <description asp-for="Achievement.CreditsAvailable"></description>
+                        </span>
+                    </div>
+                    <span asp-validation-for="Achievement.CreditsAvailable" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-xl-4">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Achievement.FieldOfStudy" class="input-group-text"></label>
+                        <input asp-for="Achievement.FieldOfStudy" class="form-control" />
+                        <span class="input-group-text">
+                            <description asp-for="Achievement.FieldOfStudy"></description>
+                        </span>
+                    </div>
+                    <span asp-validation-for="Achievement.FieldOfStudy" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-xl-4">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Achievement.Specialization" class="input-group-text"></label>
+                        <input asp-for="Achievement.Specialization" class="form-control" />
+                        <span class="input-group-text">
+                            <description asp-for="Achievement.Specialization"></description>
+                        </span>
+                    </div>
+                    <span asp-validation-for="Achievement.Specialization" class="text-danger"></span>
+                </div>
+            </div>
+        </div>    
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_DisplayScriptsPartial");
+    }
+    <script>
+        $('#ImageFile').change(function () {
+            $('#upload-image-btn')[0].disabled = $('#ImageFile')[0].files.length === 0;
+        });
+    </script>
+}

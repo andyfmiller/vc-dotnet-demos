@@ -1,0 +1,80 @@
+@page
+@using VerifierApp.Data.Models
+@using VerifierApp.Pages.Shared
+@model IndexModel
+
+@{
+    ViewData["Title"] = NavPages.AdminRequirements;
+    ViewData["ActivePage"] = NavPages.AdminRequirements;
+}
+
+@if (!string.IsNullOrEmpty(ViewData["Message"]?.ToString()))
+{
+    <div class="alert alert-success">
+        @ViewData["Message"]
+    </div>
+}
+
+@if (!ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+}
+
+<div class="card shadow mt-3">
+    <div class="card-header d-flex align-items-center shadow">
+        <div class="card-header-icon">
+            <i class="fas fa-users me-2" style="font-size: 1.5em"></i>
+        </div>
+
+        <div class="text-size-large me-auto">
+            @NavPages.AdminRequirements
+        </div>
+
+        <a asp-page="Create" class="btn btn-sm btn-dark mx-2 text-nowrap"
+           aria-label="Create a new requirement"
+           title="Create a new requirement" data-bs-toggle="tooltip">
+            <i class="fas fa-plus"></i>
+            <span class="d-none d-lg-inline text-uppercase">Create New</span>
+        </a>
+    </div>
+    <div class="card-body row row-cols-1 flex-column-reverse flex-lg-row">
+        <div class="col">
+            @if (Model.Requirements.Count == 0)
+            {
+                <p>No requirements yet.</p>
+            }
+            <ul id="requirements-list" class="list-group list-group-flush">
+                @foreach (var requirement in Model.Requirements)
+                {
+                    <li id="requirement-@requirement.CredentialRequirementKey" class="list-group-item px-0"
+                        data-text="@requirement.Name">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-grow-1 me-2">
+                                        <a asp-page="Edit" asp-route-key="@requirement.CredentialRequirementKey">
+                                            @requirement.Name
+                                        </a>
+                                        <div class="text-size-small">
+                                            <span class="fw-bold me-2">Achievement Type:</span><span class="text-muted">@requirement.AchievementType</span>
+                                            <span class="fw-bold ms-2 me-2">Reason:</span><span class="text-muted">@requirement.Reason</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <partial name="Requirements/_ContextMenuPartial" model="requirement" view-data="ViewData" />
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_DisplayScriptsPartial");
+    }
+}

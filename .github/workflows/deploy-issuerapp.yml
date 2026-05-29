@@ -1,0 +1,45 @@
+name: Deploy IssuerApp to Azure
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'IssuerApp/**'
+      - 'Library/**'
+      - '.github/workflows/deploy-issuerapp.yml'
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: vcdemos-issuer
+  DOTNET_VERSION: '10.0.x'
+  PROJECT_PATH: IssuerApp/IssuerApp.csproj
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4.3.1
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.PROJECT_PATH }}
+
+      - name: Build
+        run: dotnet build ${{ env.PROJECT_PATH }} --configuration Release --no-restore -p:SkipVcalmClient=true -p:SkipOpenBadgesClient=true
+
+      - name: Publish
+        run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release --no-build --output ./publish/issuerapp -p:SkipVcalmClient=true -p:SkipOpenBadgesClient=true
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.ISSUERAPP_AZURE_PUBLISH_PROFILE }}
+          package: ./publish/issuerapp

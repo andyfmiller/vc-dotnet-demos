@@ -1,0 +1,45 @@
+name: Deploy VerifierApp to Azure
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'VerifierApp/**'
+      - 'Library/**'
+      - '.github/workflows/deploy-verifierapp.yml'
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: vcdemos-verifier
+  DOTNET_VERSION: '10.0.x'
+  PROJECT_PATH: VerifierApp/VerifierApp.csproj
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4.3.1
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.PROJECT_PATH }}
+
+      - name: Build
+        run: dotnet build ${{ env.PROJECT_PATH }} --configuration Release --no-restore -p:SkipVcalmClient=true -p:SkipOpenBadgesClient=true
+
+      - name: Publish
+        run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release --no-build --output ./publish/verifierapp -p:SkipVcalmClient=true -p:SkipOpenBadgesClient=true
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.VERIFIERAPP_AZURE_PUBLISH_PROFILE }}
+          package: ./publish/verifierapp

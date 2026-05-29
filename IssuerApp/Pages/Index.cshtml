@@ -1,0 +1,39 @@
+@page
+@using IssuerApp
+@using IssuerApp.Data.Models
+@using IssuerApp.Pages.Shared
+@using Microsoft.AspNetCore.Http.Extensions
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> _userManager
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+    ViewData["ActivePage"] = NavPages.Dashboard;
+    ViewData["ReturnUrl"] = Request.GetDisplayUrl();
+
+    var user = await _userManager.GetUserAsync(User);
+}
+
+<div asp-validation-summary="All" class="alert alert-danger mt-2"></div>
+
+@if (User.Identity == null || !User.Identity.IsAuthenticated)
+{
+    <div class="text-center w-100">
+        <h1 class="display-4">Welcome</h1>
+        <p>This is a sample Issuer App. <a asp-page="./Login">Login</a> to get started.</p>
+    </div>
+
+    return;
+}
+
+@if (user != null && await _userManager.IsInRoleAsync(user, Constants.Roles.Admin))
+{
+    <partial name="Admin/_AdminDashboardPartial" />
+}
+
+@section Scripts
+{
+    @{
+        await Html.RenderPartialAsync("Shared/_DisplayScriptsPartial");
+    }
+}

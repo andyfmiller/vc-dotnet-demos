@@ -1,0 +1,69 @@
+@page
+@using IssuerApp
+@using IssuerApp.Pages.Shared
+@model IssuerApp.Pages.HolderPortal.IndexModel
+
+@{
+    ViewData["Title"] = "My Credentials";
+    ViewData["ActivePage"] = NavPages.Dashboard;
+}
+
+<div class="card shadow mt-3">
+    <div class="card-header d-flex align-items-center shadow">
+        <div class="card-header-icon" title="My Credentials" data-bs-toggle="tooltip">
+            <i class="fa-regular fa-id-card" style="font-size: 1.5em"></i>
+        </div>
+        <div class="text-size-large ms-2 me-auto">
+            My Credentials
+        </div>
+    </div>
+    <div class="card-body">
+        @if (Model.AchievementCredentials is null || Model.AchievementCredentials.Count == 0)
+        {
+            <p class="text-muted">No credentials have been prepared for you yet.</p>
+        }
+        else
+        {
+            <ul class="list-group list-group-flush">
+                @foreach (var ac in Model.AchievementCredentials)
+                {
+                    var achievement = ac.CredentialSubject?.Achievement;
+                    var name = ac.Name ?? achievement?.DisplayName ?? "Unnamed Credential";
+
+                    string? image;
+                    if (!Constants.Assets.AchievementTypeAssets.TryGetValue(
+                            ac.CredentialSubject?.Achievement?.AchievementType?.Type ?? "", out image))
+                    {
+                        image = Constants.Assets.DefaultAchievementTypeImage;
+                    }
+                    image = Url.Content($"~/images/achievements/{image}");
+
+                    if (!string.IsNullOrEmpty(ac.Image?.Id))
+                        image = ac.Image.Id;
+                    else if (!string.IsNullOrEmpty(ac.CredentialSubject?.Achievement?.Image?.Id))
+                        image = ac.CredentialSubject.Achievement.Image.Id;
+
+                    <li class="list-group-item px-0">
+                        <div class="d-flex align-items-center">
+                            <div class="me-2" style="max-height: 1.5em; max-width: 1.5em">
+                                <img src="@image" style="width:1.5em" alt="@ac.CredentialSubject?.Achievement?.AchievementType" />
+                            </div>
+                            <div class="flex-grow-1 me-3">
+                                <a asp-page="/HolderPortal/Issue" asp-route-key="@ac.AchievementCredentialKey">
+                                    @name
+                                </a>
+                            </div>
+                            <div>
+                                <a asp-page="/HolderPortal/Issue"
+                                   asp-route-key="@ac.AchievementCredentialKey"
+                                   class="btn btn-sm btn-primary">
+                                    Request
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>

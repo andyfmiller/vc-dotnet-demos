@@ -1,0 +1,17 @@
+@* Reusable QR code scanner partial.
+   Usage: <partial name="_QrScannerPartial" model="@("interactionUrl")" />
+   Pass the id of the <input> that should receive the scanned URL as the model string. *@
+@model string
+
+@{
+    var targetInputId = Model ?? "InteractionUrl";
+    var scannerDivId  = "qr-scanner-" + targetInputId;
+    var buttonId      = "qr-btn-" + targetInputId;
+}
+
+<button type="button" id="@buttonId" class="btn btn-outline-secondary mt-2"
+        onclick="toggleQrScanner('@scannerDivId', '@targetInputId', '@buttonId')">
+    <i class="fas fa-qrcode"></i> Scan QR Code
+</button>
+
+<div id="@scannerDivId" class="mt-2" style="display:none; max-width:400px;"></div>

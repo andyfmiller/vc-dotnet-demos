@@ -1,0 +1,65 @@
+@page
+@using IssuerApp.Data.Models
+@using IssuerApp.Pages.Shared
+@using IssuerApp.Pages.Admin.Members
+@model CreateModel
+
+@{
+    ViewData["Title"] = "Create New Member";
+    ViewData["ActivePage"] = NavPages.Members;
+}
+
+@if (!string.IsNullOrEmpty(ViewData["Message"]?.ToString()))
+{
+    <div class="alert alert-success">
+        @ViewData["Message"]
+    </div>
+}
+
+@if (!ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+}
+
+<form method="post" class="card shadow mt-3">
+    <input type="hidden" asp-for="Member.OrganizationKey" />
+    <div class="card-header d-flex align-items-center shadow">
+        <div class="text-size-large me-auto">
+            @ViewData["Title"]
+        </div>
+        <button asp-page-handler="" type="submit" class="btn btn-sm btn-dark ms-3 text-nowrap">
+            <i class="fas fa-save"></i>
+            <span class="d-none d-sm-inline text-uppercase">Save</span>
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-xl-4">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Member.Name" class="input-group-text"></label>
+                        <input asp-for="Member.Name" class="form-control" data-lpignore="true" />
+                        <span class="input-group-text">
+                            <description asp-for="Member.Name"></description>
+                        </span>
+                    </div>
+                    <span asp-validation-for="Member.Name"></span>
+                </div>
+            </div>
+            <div class="col-xl-4">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <label asp-for="Member.Organization" class="input-group-text"></label>
+                        <input class="form-control" type="text" readonly disabled value="@(Model.Member?.Organization?.DisplayName)" />
+                        <span class="input-group-text">
+                            <description asp-for="Member.Organization"></description>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+

@@ -1,0 +1,96 @@
+@using VerifierApp
+@using VerifierApp.Data.Models
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration _configuration
+@inject UserManager<ApplicationUser> _userManager
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
+    <title>@ViewData["Title"] - @(_configuration["Title"] ?? "Verifier App")</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed&Nunito:wght@300&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.css" />
+    <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
+    <script src="https://kit.fontawesome.com/47695d2e60.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <header class="navbar sticky-top flex-md-nowrap py-0">
+
+        <a asp-page="/Index" class="navbar-brand border-end col-md-3 col-lg-2 me-0 py-2 fs-6 text-center text-white">
+            <div class="brand-name text-size-large ms-3 me-3">
+                Verifier App
+            </div>
+        </a>
+
+        @if (User.Identity is { IsAuthenticated: true })
+        {
+            var user = ViewData["AppUser"] as ApplicationUser;
+
+            if (user != null && await _userManager.IsInRoleAsync(user, Constants.Roles.Admin))
+            {
+                <span class="navbar-text px-3 ms-auto text-white text-nowrap">
+                    <i class="fas fa-user"></i>
+                    @user.UserName
+                </span>
+            }
+
+        }
+
+        <ul class="navbar-nav flex-row d-md-none">
+            <li class="nav-item text-nowrap">
+                <button class="nav-link px-3 text-white" type="button" data-bs-toggle="offcanvas"
+                        data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </li>
+        </ul>
+
+    </header>
+
+    <div id="loader" style="display: none"></div>
+
+    <div class="container-fluid">
+        <div class="row">
+
+            <partial name="_SidebarMenuPartial" />
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="toast-container text-center w-100">
+                    <div id="toast" class="toast toast-alert fade" data-delay="1500">
+                        <div class="toast-body"></div>
+                    </div>
+                </div>
+
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/jquery.js"></script>
+    <script src="~/lib/jquery-ajax-unobtrusive/jquery.unobtrusive-ajax.min.js"></script>
+    <script src="~/lib/bootstrap/js/bootstrap.bundle.js"></script>
+    <script src="~/lib/showdown/showdown.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+
+        // If there's a message in ViewData, show it as a toast notification
+        const message = '@ViewData["Message"]';
+        if (message !== '') { showToast(message); }
+
+        // Initialize Bootstrap tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+    </script>
+
+</body>
+</html>

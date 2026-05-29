@@ -1,0 +1,9 @@
+@model DateTimeOffset?
+@if (Model.HasValue)
+{
+    @Model.Value.ToString("MM/dd/yyyy")
+}
+else
+{
+    @("--/--/--")
+}

@@ -1,0 +1,62 @@
+@using IssuerApp
+@using IssuerApp.Data
+@using IssuerApp.Data.Models
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+
+@inject ApplicationDbContext _dbContext
+@inject UserManager<ApplicationUser> _userManager
+
+@if (User.Identity is { IsAuthenticated: true })
+{
+    var user = await _userManager.GetUserAsync(User);
+
+    if (user != null && await _userManager.IsInRoleAsync(user, Constants.Roles.Holder))
+    {
+        var members = await _dbContext.Members
+            .OrderBy(r => r.Name)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var selectedMember = members
+            .SingleOrDefault(r => r.MemberKey == user.SelectedMemberKey);
+
+        var path = $"{Context.Request.PathBase}{Context.Request.Path}";
+        var query = Context.Request.QueryString;
+        query = query.Add("handler", "ChangeMember");
+
+        <li class="nav-item">
+            <div class="dropdown nav-link d-flex align-items-center gap-2">
+                <i class="fa-solid fa-person" style="font-size: 1.5em" data-bs-toggle="tooltip" title="Change Your Demo Member"></i>
+                <div class="dropdown-toggle"
+                       href="#"
+                       id="memberSelectorDropdown"
+                       role="button"
+                       data-bs-toggle="dropdown"
+                       aria-haspopup="true"
+                       aria-expanded="false">
+                    @(selectedMember?.Name ?? "Select Member")
+                </div>
+
+                <form class="dropdown-menu"
+                      method="post"
+                      action="@(path)@(query.ToUriComponent())"
+                      aria-labelledby="memberSelectorDropdown">
+
+                    <h6 class="dropdown-header">Member</h6>
+                    <div class="dropdown-divider"></div>
+
+                    @foreach (var member in members)
+                    {
+                        <button type="submit"
+                                class="dropdown-item @(selectedMember?.MemberKey == member.MemberKey ? "disabled" : "")"
+                                name="NavMemberKey"
+                                value="@member.MemberKey">
+                            @member.Name
+                        </button>
+                    }
+                </form>
+            </div>
+        </li>
+    }
+}

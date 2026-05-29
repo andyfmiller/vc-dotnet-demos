@@ -1,0 +1,72 @@
+@using IssuerApp
+@using IssuerApp.Data
+@using IssuerApp.Data.Models
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+
+@inject ApplicationDbContext _dbContext
+@inject UserManager<ApplicationUser> _userManager
+
+@if (User.Identity is { IsAuthenticated: true })
+{
+    var user = await _userManager.GetUserAsync(User);
+
+    var path = Context.Request.Path.Value ?? string.Empty;
+    var isAdminMembersPath = path.StartsWith("/Admin/Members", StringComparison.OrdinalIgnoreCase)
+        || path.StartsWith("/Admin/Achievements", StringComparison.OrdinalIgnoreCase)
+        || path.StartsWith("/Admin/AchievementCredentials", StringComparison.OrdinalIgnoreCase);
+
+    var isAdmin = user != null && await _userManager.IsInRoleAsync(user, Constants.Roles.Admin);
+    var isHolder = user != null && await _userManager.IsInRoleAsync(user, Constants.Roles.Holder);
+
+    if (user != null && ((isAdmin && isAdminMembersPath) || isHolder))
+    {
+        var organizations = await _dbContext.Organizations
+            .Include(x => x.Profile)
+            .OrderBy(x => x.Profile!.Name ?? x.Profile.Id)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var selectedOrganization = organizations
+            .SingleOrDefault(x => x.OrganizationKey == user.SelectedOrganizationKey);
+
+        var actionPath = $"{Context.Request.PathBase}{Context.Request.Path}";
+        var query = Context.Request.QueryString;
+        query = query.Add("handler", "ChangeOrg");
+
+        <li class="nav-item">
+            <div class="dropdown nav-link d-flex align-items-center gap-2">
+                <i class="fas fa-university" style="font-size: 1.5em" data-bs-toggle="tooltip" title="Change Your Demo Organization"></i>
+                <div class="dropdown-toggle"
+                       href="#"
+                       id="orgSelectorDropdown"
+                       role="button"
+                       data-bs-toggle="dropdown"
+                       aria-haspopup="true"
+                       aria-expanded="false">
+                       @selectedOrganization?.DisplayName
+                </div>
+
+                <form class="dropdown-menu"
+                      method="post"
+                      action="@(actionPath)@(query.ToUriComponent())"
+                      aria-labelledby="orgSelectorDropdown">
+
+                    <h6 class="dropdown-header">Organization</h6>
+                    <div class="dropdown-divider"></div>
+
+                    @foreach (var organization in organizations)
+                    {
+                        <button type="submit"
+                                class="dropdown-item @(selectedOrganization?.OrganizationKey == organization.OrganizationKey ? "disabled" : "")"
+                                name="NavOrgKey"
+                                value="@organization.OrganizationKey">
+                            @organization.DisplayName
+                        </button>
+                    }
+                </form>
+            </div>
+                
+        </li>
+    }
+}

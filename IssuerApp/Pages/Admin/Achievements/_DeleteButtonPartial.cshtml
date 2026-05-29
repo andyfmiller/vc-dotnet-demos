@@ -1,0 +1,36 @@
+@using IssuerApp.Pages.Admin.Achievements
+@model EditModel
+
+<button type="button" class="btn btn-sm btn-dark"
+        data-bs-toggle="modal" data-bs-target="#deleteConfirmation"
+        rel="tooltip" title="Delete">
+    <i class="fas fa-trash-alt"></i>
+    <span class="d-none d-lg-inline text-uppercase">Delete</span>
+</button>
+
+<div class="modal fade" id="deleteConfirmation" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete @Model.Achievement?.Name</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    Are you sure you want to delete this achievement? This will also delete
+                    all of the issued instances of this achievement.
+                </p>
+                <button type="submit" class="btn btn-sm btn-danger text-uppercase"
+                        asp-page-handler="DeleteAchievement" asp-route-key="@Model.Achievement?.AchievementKey"
+                        asp-route-pagename="Index">
+                    Delete
+                </button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary text-uppercase" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

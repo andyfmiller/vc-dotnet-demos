@@ -1,0 +1,119 @@
+@page
+@using IssuerApp.Data.Models
+@using IssuerApp.Pages.Shared
+@using IssuerApp.Services
+@inject IStatusListService StatusListService
+@model IndexModel
+
+@{
+    ViewData["Title"] = NavPages.AchievementCredentials;
+    ViewData["ActivePage"] = NavPages.AchievementCredentials;
+}
+
+@if (!string.IsNullOrEmpty(ViewData["Message"]?.ToString()))
+{
+    <div class="alert alert-success">
+        @ViewData["Message"]
+    </div>
+}
+
+@if (!ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+}
+
+<div class="card shadow mt-3">
+    <div class="card-header d-flex align-items-center shadow">
+        <div class="card-header-icon me-1">
+            <i class="fas fa-university" style="font-size: 1.5em"></i>
+        </div>
+        <div class="text-size-large me-1">
+            @Model.SelectedOrganization
+        </div>
+        <div class="card-header-icon me-1">
+            <i class="fa-regular fa-id-card" style="font-size: 2em"></i>
+        </div>
+        <div class="text-size-large me-auto">
+            @NavPages.AchievementCredentials
+        </div>
+
+        <a asp-page="Create" class="btn btn-sm btn-dark mx-2"
+            title="Create a new Open Badge" data-bs-toggle="tooltip">
+            <i class="fas fa-plus"></i>
+            <span class="d-none d-lg-inline text-uppercase">Create New</span>
+        </a>
+    </div>
+
+    <div class="card-body">
+            @if (Model.AchievementCredentials.Count == 0)
+            {
+                <p>No credentials yet.</p>
+            }
+            <ul id="achievement-credentials-list" class="list-group list-group-flush">
+                @foreach (var credential in Model.AchievementCredentials.OrderByDescending(x => x.ValidFrom))
+                {
+                    var achievement = credential.CredentialSubject?.Achievement;
+                    var name = credential.Name ?? achievement?.DisplayName ?? "n/a";
+                    string? image;
+                    if (!Constants.Assets.AchievementTypeAssets.TryGetValue(credential.CredentialSubject?.Achievement?.AchievementType?.Type ?? "", out image))
+                    {
+                        image = Constants.Assets.DefaultAchievementTypeImage;
+                    }
+                    image = Url.Content($"~/images/achievements/{image}");
+
+                    if (!string.IsNullOrEmpty(credential.Image?.Id))
+                    {
+                        image = credential.Image.Id;
+                    }
+                    else if (!string.IsNullOrEmpty(credential.CredentialSubject?.Achievement?.Image?.Id))
+                    {
+                        image = credential.CredentialSubject!.Achievement!.Image!.Id;
+                    }
+
+                    <li id="achievement-credential-@credential.AchievementCredentialKey" class="list-group-item px-0 d-flex align-items-center"
+                        data-type="@credential.CredentialSubject?.Achievement?.AchievementType?.Type"
+                        data-name="@name"
+                        data-valid-from="@credential.ValidFrom"
+                        data-member="@credential.CredentialSubject?.MemberKey">
+                        <div class="me-2" style="max-height: 1.5em; max-width: 1.5em"
+                             data-bs-toggle="tooltip" title="@Html.DisplayTextFor(x => credential.CredentialSubject!.Achievement!.AchievementType)">
+                            <img src="@image" style="width:1.5em" alt="@credential.CredentialSubject?.Achievement?.AchievementType" />
+                        </div>
+                        <div class="flex-grow-1">
+                            <a asp-page="Edit" asp-route-key="@credential.AchievementCredentialKey">
+                                @name
+                            </a>
+                            <div class="text-size-small">
+                                <span class="fw-bold me-2">Organization:</span>@(credential.Organization?.DisplayName ?? "n/a")
+                                <span class="fw-bold ms-2 me-2">Achievement:</span>@(achievement?.DisplayName ?? "n/a")
+                                <span class="fw-bold ms-2 me-2">Type:</span>@(achievement?.AchievementType?.Type ?? "n/a")
+                                <span class="fw-bold ms-2 me-2">Valid From:</span>@Html.DisplayFor(x => credential.ValidFrom)
+                                <span class="fw-bold ms-2 me-2">Issued To:</span>@(credential.CredentialSubject?.Member?.Name ?? "n/a")
+                                @if (credential.StatusListIndex.HasValue)
+                                {
+                                    if (StatusListService.IsRevoked(credential.StatusListIndex.Value))
+                                    {
+                                        <span class="badge bg-danger ms-2" title="Credential is revoked in the Bitstring Status List">Revoked</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success ms-2" title="Credential is active in the Bitstring Status List">Active</span>
+                                    }
+                                }
+                            </div>
+                        </div>
+                        <partial name="AchievementCredentials/_ContextMenuPartial" model="credential" view-data="@ViewData" />
+                    </li>
+                }
+            </ul>
+    </div>
+</div>
+
+@section Scripts
+{
+    @{
+        await Html.RenderPartialAsync("_DisplayScriptsPartial");
+    }
+}

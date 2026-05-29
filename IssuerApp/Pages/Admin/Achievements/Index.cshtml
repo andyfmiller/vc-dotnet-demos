@@ -1,0 +1,87 @@
+@page
+@using IssuerApp.Pages.Shared
+@model IssuerApp.Pages.Admin.Achievements.IndexModel
+
+@if (!string.IsNullOrEmpty(ViewData["Message"]?.ToString()))
+{
+    <div class="alert alert-success">
+        @ViewData["Message"]
+    </div>
+}
+
+@if (!ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+}
+
+<div class="card shadow mt-3">
+    <div class="card-header d-flex align-items-center shadow">
+        <div class="card-header-icon me-1">
+            <i class="fas fa-university" style="font-size: 1.5em"></i>
+        </div>
+        <div class="text-size-large me-1">
+            @Model.SelectedOrganization
+        </div>
+        <div class="card-header-icon me-1">
+            <i class="fa-solid fa-list-check" style="font-size: 2em"></i>
+        </div>
+        <div class="text-size-large me-auto">
+            @NavPages.Achievements
+        </div>
+
+        <a asp-page="Create" class="btn btn-sm btn-dark mx-2"
+               aria-label="Create a new achievement"
+               title="Create a new achievement" data-bs-toggle="tooltip">
+            <i class="fas fa-plus"></i>
+            <span class="d-none d-md-inline text-uppercase">Create New</span>
+        </a>
+    </div>
+
+    <div class="card-body">
+        @if (Model.Achievements.Count == 0)
+        {
+            <p>No achievements yet.</p>
+        }
+        <ul id="achievements-list" class="list-group list-group-flush">
+            @foreach (var achievement in Model.Achievements)
+            {
+                string? image;
+                if (!Constants.Assets.AchievementTypeAssets.TryGetValue(achievement.AchievementType?.Type ?? "", out image))
+                {
+                    image = Constants.Assets.DefaultAchievementTypeImage;
+                }
+                image = Url.Content($"~/images/achievements/{image}");
+
+                if (!string.IsNullOrEmpty(achievement.Image?.Id))
+                {
+                    image = achievement.Image.Id;
+                }
+                <li id="achievement-@achievement.AchievementKey" class="list-group-item px-0 d-flex align-items-center"
+                    data-text="@achievement.DisplayName">
+                    <div class="me-2" style="max-height: 1.5em; max-width: 1.5em"
+                         data-bs-toggle="tooltip" title="@Html.DisplayTextFor(x => achievement.AchievementType)">
+                        <img src="@image" style="width:1.5em" alt="@achievement.AchievementType" />
+                    </div>
+                    <div class="flex-grow-1">
+                        <a asp-page="Edit" asp-route-key="@achievement.AchievementKey">
+                            @(achievement.DisplayName ?? "n/a")
+                        </a>
+                        <div class="text-size-small">
+                            <span class="fw-bold me-2">Organization:</span>@(achievement.Organization?.DisplayName ?? "n/a")
+                            <span class="fw-bold ms-2 me-2">Type:</span>@(achievement.AchievementType?.Type ?? "n/a")
+                        </div>
+                    </div>
+                    <partial name="Achievements/_ContextMenuPartial" model="achievement" view-data="ViewData" />
+                </li>
+            }
+        </ul>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_DisplayScriptsPartial");
+    }
+}

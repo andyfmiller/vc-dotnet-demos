@@ -1,0 +1,85 @@
+@page
+@using IssuerApp.Data.Models
+@using IssuerApp.Pages.Shared
+@model IssuerApp.Pages.Admin.Organizations.IndexModel
+
+@{
+    ViewData["Title"] = NavPages.Organizations;
+    ViewData["ActivePage"] = NavPages.Organizations;
+}
+
+@if (!string.IsNullOrEmpty(ViewData["Message"]?.ToString()))
+{
+    <div class="alert alert-success">
+        @ViewData["Message"]
+    </div>
+}
+
+@if (!ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+}
+
+<div class="card shadow mt-3">
+    <div class="card-header d-flex align-items-center shadow">
+        <div class="card-header-icon me-2">
+            <i class="fas fa-university" style="font-size: 1.5em"></i>
+        </div>
+        <div class="text-size-large me-auto">
+            @NavPages.Organizations
+        </div>
+
+        <a asp-page="Create" class="btn btn-sm btn-dark mx-2 text-nowrap"
+               aria-label="Create a new organization"
+               title="Create a new organization" data-bs-toggle="tooltip">
+            <i class="fas fa-plus"></i>
+            <span class="d-none d-lg-inline text-uppercase">Create New</span>
+        </a>
+    </div>
+    <div class="card-body row">
+        <div class="col">
+            @if (Model.Organizations.Count == 0)
+            {
+                <p>No organizations yet.</p>
+            }
+            <ul id="organizations-list" class="list-group list-group-flush">
+                @foreach (var item in Model.Organizations)
+                {
+                    var organization = item.Organization;
+
+                    <li id="organization-@organization.OrganizationKey" class="list-group-item px-0 d-flex align-items-center">
+                        @if (!string.IsNullOrEmpty(organization.Profile?.Image?.Id))
+                        {
+                            <img src="@organization.Profile.Image.Id" class="me-2" alt="" style="height: 2rem; width: 2rem; border-radius: 1rem;" />
+                        }
+                        <div class="flex-grow-1">
+                            <a asp-page="Edit" asp-route-key="@organization.OrganizationKey">
+                                @organization.DisplayName
+                            </a>
+                            <div class="text-size-small d-flex">
+                                <div class="me-2">
+                                    <span class="fw-bold">Members:</span> @item.MemberCount
+                                </div>
+                                <div class="me-2">
+                                    <span class="fw-bold">Achievements:</span> @item.AchievementCount
+                                </div>
+                                <div class="me-2">
+                                    <span class="fw-bold">Credentials:</span> @item.CredentialCount
+                                </div>
+                            </div>
+                        </div>
+                        <partial name="Organizations/_ContextMenuPartial" model="organization" view-data="ViewData" />
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_DisplayScriptsPartial");
+    }
+}

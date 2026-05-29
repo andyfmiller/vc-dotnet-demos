@@ -1,0 +1,4 @@
+@using IssuerApp.Data.Models
+@model StringList
+
+@Html.TextBox("", Model == null ? null : string.Join(", ", Model), new { @class="form-control", placeholder="Comma separated values" })

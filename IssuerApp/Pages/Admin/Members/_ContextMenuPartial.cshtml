@@ -1,0 +1,60 @@
+@using IssuerApp.Data.Models
+@model Member
+
+<div class="dropdown">
+    <button class="btn btn-sm text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Member actions menu">
+        <i class="fas fa-ellipsis-v"></i>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+        <li>
+            <a asp-page="/Admin/Members/Edit"
+               asp-route-key="@Model.MemberKey"
+               class="dropdown-item">
+                <i class="fas fa-edit me-1" style="width: 1em"></i>
+                View / Edit
+            </a>
+        </li>
+        <li>
+            <a href="#"
+               class="dropdown-item"
+               data-bs-toggle="modal"
+               data-bs-target="#@($"delete-member-{Model.MemberKey}")">
+                <i class="fas fa-trash-alt me-1" style="width: 1em"></i>
+                Delete
+            </a>
+        </li>
+    </ul>
+</div>
+<form method="post"
+      class="modal"
+      id="@($"delete-member-{Model.MemberKey}")"
+      tabindex="-1"
+      data-ajax="true"
+      data-ajax-method="post"
+      data-ajax-url="?handler=DeleteMember&amp;key=@Model.MemberKey"
+      data-ajax-loading="#loader"
+      data-ajax-success="$('#delete-member-@Model.MemberKey').one('hidden.bs.modal', function(){ $('#member-@Model.MemberKey').remove(); }).modal('hide');"
+      data-ajax-failure="showToast(xhr.statusText)">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete @Model.Name</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    Are you sure you want to delete this member account? This will also delete
+                    the member's achievements.
+                </p>
+                <button type="submit" class="btn btn-sm btn-danger text-uppercase">
+                    Delete
+                </button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary text-uppercase" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</form>

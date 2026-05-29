@@ -1,0 +1,19 @@
+<script type="text/javascript">
+
+    // Render markdown
+    $(".markdown").each(function(_, elem) {
+        const text = `\n\n${elem.innerHTML.trim()}`;
+        const converter = new showdown.Converter();
+        const html = converter.makeHtml(text);
+        elem.innerHTML = html;
+    });
+ 
+    // Display Data URI in a separate window
+    function exportToView(dataUri) {
+        const dataWindow = window.open("");
+        dataWindow.document.write(
+            `<iframe width='100%' height='100%' src='${dataUri}'></iframe>`);
+        return false;
+    }
+
+</script>

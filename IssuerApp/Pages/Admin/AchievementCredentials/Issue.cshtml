@@ -1,0 +1,74 @@
+@page
+@using IssuerApp.Pages.Shared
+@model IssueModel
+
+@{
+    ViewData["Title"] = "Issue Open Badge";
+    ViewData["ActivePage"] = NavPages.AchievementCredentials;
+}
+
+<h2>Issue via VCALM</h2>
+<p class="text-muted">
+    Creates a VCALM exchange and generates an
+    <strong>Interaction URL</strong> (§3.7.1) that the student opens in their wallet
+    to receive this credential.
+</p>
+
+@if (Model.AchievementCredential is not null)
+{
+    <div class="card mb-4">
+        <div class="card-header">Credential to be issued</div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Achievement</dt>
+                <dd class="col-sm-9">@(Model.Achievement?.Name ?? "—")</dd>
+
+                <dt class="col-sm-3">Member</dt>
+                <dd class="col-sm-9">@(Model.Member?.Name ?? Model.AchievementCredential.CredentialSubject?.Id ?? "—")</dd>
+
+                <dt class="col-sm-3">Issuer</dt>
+                <dd class="col-sm-9">@(Model.IssuerName ?? "—")</dd>
+            </dl>
+        </div>
+    </div>
+}
+
+@if (Model.InteractionUrl is not null)
+{
+    <div class="alert alert-success">
+        <h5 class="alert-heading">Interaction URL generated</h5>
+        <p>
+            Share the URL below with the student. Their wallet will open it to receive the credential.
+        </p>
+        <div class="input-group mb-2">
+            <input id="interactionUrl"
+                   type="text"
+                   class="form-control font-monospace"
+                   value="@Model.InteractionUrl"
+                   readonly />
+            <button class="btn btn-outline-secondary"
+                    type="button"
+                    onclick="navigator.clipboard.writeText(document.getElementById('interactionUrl').value)">
+                Copy
+            </button>
+        </div>
+        <hr />
+        <p class="mb-0">
+            <strong>Interaction URL (§3.7.1):</strong><br />
+            <code>@Model.InteractionUrl</code>
+        </p>
+    </div>
+}
+else
+{
+    <form method="post" asp-page-handler="CreateExchange" asp-route-key="@Model.AchievementCredential?.AchievementCredentialKey">
+        <button type="submit" class="btn btn-primary">
+            Generate Interaction URL
+        </button>
+        <a asp-page="./Index" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+}
+
+<div class="mt-4">
+    <a asp-page="./Index" class="text-muted small">← Back to credentials</a>
+</div>

@@ -1,0 +1,68 @@
+@using Microsoft.AspNetCore.Identity
+@using WalletApp
+@using WalletApp.Data.Models
+@inject UserManager<ApplicationUser> _userManager;
+
+<div class="sidebar border-top col-md-3 col-lg-2 p-0">
+    <div class="offcanvas-md offcanvas-end" tabindex="-1"
+        id="sidebarMenu" aria-labelledby="sidebarMenuLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="sidebarMenuLabel">Wallet App</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
+                data-bs-target="#sidebarMenu" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body d-md-flex flex-column p-0 pt-md-3">
+            <ul class="nav flex-column mb-auto">
+                @if (User.Identity is { IsAuthenticated: true })
+                {
+                    var user = ViewData["AppUser"] as ApplicationUser;
+
+                    if (user != null && await _userManager.IsInRoleAsync(user, Constants.Roles.Admin))
+                    {
+                        <li class="nav-item">
+                            <a asp-page="/Admin/Holders/Index" class="nav-link d-flex align-items-center gap-2 @NavPages.HoldersNavClass(ViewContext)">
+                                <i class="fas fa-person" style="font-size: 1.5em"></i>
+                                @NavPages.Holders
+                            </a>
+                        </li>
+                    }
+                    else if (user != null && await _userManager.IsInRoleAsync(user, Constants.Roles.Holder))
+                    {
+                        <li class="nav-item">
+                            <a asp-page="/Holder/Index" class="nav-link d-flex align-items-center gap-2 @NavPages.MyCredentialsNavClass(ViewContext)">
+                                <i class="fa-regular fa-id-card" style="font-size: 1.5em"></i>
+                                @NavPages.MyCredentials
+                            </a>
+                        </li>
+                    }
+                }
+            </ul>
+
+            <h6 class="text-center px-3 pt-2 mt-2 text-black border-top border-dark">DEMO TOOLS</h6>
+
+            <ul class="nav flex-column pb-2">
+                @if (User.Identity is { IsAuthenticated: true })
+                {
+                    <partial name="_RoleSelector" />
+                    <partial name="_HolderSelector" />
+
+                    <li class="nav-item">
+                        <a asp-page="/Logout" class="nav-link d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-arrow-right-from-bracket" style="font-size: 1.5em"></i>
+                            Logout
+                        </a>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a asp-page="/Login" class="nav-link d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-arrow-right-to-bracket" style="font-size: 1.5em"></i>
+                            Login
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>

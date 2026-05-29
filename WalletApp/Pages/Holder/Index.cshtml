@@ -1,0 +1,78 @@
+@page
+@using Microsoft.AspNetCore.Http.Extensions
+@using Microsoft.AspNetCore.Identity
+@using WalletApp
+@using WalletApp.Data.Models
+@using WalletApp.Pages.Shared
+@model IndexModel
+
+@{
+    ViewData["Title"] = NavPages.MyCredentials;
+    ViewData["ActivePage"] = NavPages.MyCredentials;
+}
+
+@if (!string.IsNullOrEmpty(ViewData["Message"]?.ToString()))
+{
+    <div class="alert alert-success">
+        @ViewData["Message"]
+    </div>
+}
+
+@if (!ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+}
+
+<div class="card shadow mt-3">
+    <div class="card-header d-flex align-items-center shadow">
+        <div class="card-header-icon me-2" title="My Credentials" data-bs-toggle="tooltip">
+            <i class="fa-solid fa-id-card" style="font-size: 1.5em"></i>
+        </div>
+        <div class="text-size-large me-auto">
+            My Credentials
+        </div>
+        <a asp-page="/Exchange/Receive" class="btn btn-sm btn-dark me-2" data-bs-toggle="tooltip" title="Retrieve your credential from an issuer">
+            <i class="fa-solid fa-file-import me-1"></i>
+            <span class="d-none d-lg-inline text-uppercase">Retrieve Credential</span>
+        </a>
+        <a asp-page="/Exchange/Present" class="btn btn-sm btn-dark" data-bs-toggle="tooltip" title="Submit your credentials to a verifier">
+            <i class="fa-solid fa-file-export me-1"></i>
+            <span class="d-none d-lg-inline text-uppercase">Submit Credentials</span>
+        </a>
+    </div>
+    <div class="card-body">
+        @if (Model.HolderCredentials.Count == 0)
+        {
+            <p class="text-muted">No credentials received yet. Use the <strong>Receive Credential</strong> button to add one.</p>
+        }
+        else
+        {
+            <ul class="list-group list-group-flush">
+                @foreach (var cred in Model.HolderCredentials)
+                {
+                    <li class="list-group-item px-0">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1 me-3">
+                                <a asp-page="Detail" asp-route-key="@cred.HolderCredentialKey">
+                                    @cred.GetCredentialName()
+                                </a>
+                                <div class="text-muted small">@cred.GetCredentialType()</div>
+                            </div>
+                            <div class="text-muted small text-nowrap">
+                                @if (cred.ReplacedAt.HasValue)
+                                {
+                                    <span class="badge bg-warning text-dark me-1" title="Updated @cred.ReplacedAt.Value.ToLocalTime().ToString("yyyy-MM-dd")">
+                                        <i class="fas fa-sync-alt me-1"></i>Updated
+                                    </span>
+                                }
+                                @cred.ReceivedAt.ToLocalTime().ToString("yyyy-MM-dd")
+                            </div>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>

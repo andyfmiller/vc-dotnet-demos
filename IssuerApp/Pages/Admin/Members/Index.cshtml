@@ -1,0 +1,83 @@
+@page
+@using IssuerApp.Data.Models
+@using IssuerApp.Pages.Shared
+@model IssuerApp.Pages.Admin.Members.IndexModel
+
+@{
+    ViewData["Title"] = NavPages.Members;
+    ViewData["ActivePage"] = NavPages.Members;
+}
+
+@if (!string.IsNullOrEmpty(ViewData["Message"]?.ToString()))
+{
+    <div class="alert alert-success">
+        @ViewData["Message"]
+    </div>
+}
+
+@if (!ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+}
+
+<div class="card shadow mt-3">
+    <div class="card-header d-flex align-items-center shadow">
+        <div class="card-header-icon me-1">
+            <i class="fas fa-university" style="font-size: 1.5em"></i>
+        </div>
+        <div class="text-size-large me-1">
+            @Model.SelectedOrganization
+        </div>
+        <div class="card-header-icon me-1">
+            <i class="fa-solid fa-person" style="font-size: 2em"></i>
+        </div>
+        <div class="text-size-large me-auto">
+            @NavPages.Members
+        </div>
+
+        <a asp-page="Create" class="btn btn-sm btn-dark mx-2"
+               aria-label="Create a new member account"
+               title="Create a new member account" data-bs-toggle="tooltip">
+            <i class="fas fa-plus"></i>
+            <span class="d-none d-md-inline text-uppercase">Create New</span>
+        </a>
+    </div>
+
+    <div class="card-body">
+        @if (Model.Members.Count == 0)
+        {
+            <p>No members yet.</p>
+        }
+        <ul id="members-list" class="list-group list-group-flush">
+            @foreach (var item in Model.Members)
+            {
+                var member = item.Member;
+
+                <li id="member-@member.MemberKey" class="list-group-item px-0 d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <a asp-page="Edit" asp-route-key="@member.MemberKey">
+                            @member.Name
+                        </a>
+                        <div class="text-size-small d-flex">
+                            <div class="me-2">
+                                <span class="fw-bold">Organization:</span> @member.Organization?.DisplayName
+                            </div>
+                            <div class="me-2">
+                                <span class="fw-bold">Credentials:</span> @item.CredentialCount
+                            </div>
+                        </div>
+                    </div>
+                    <partial name="Admin/Members/_ContextMenuPartial" model="member" view-data="ViewData" />
+                </li>
+            }
+        </ul>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_DisplayScriptsPartial");
+    }
+}
