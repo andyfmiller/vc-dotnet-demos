@@ -10,7 +10,7 @@ namespace IssuerApp
 {
     public static class SeedData
     {
-        public static async Task EnsureUserSeedData(string connectionString, string didWebHost)
+        public static async Task EnsureUserSeedData(string connectionString, string didWebHost, bool isDevelopment)
         {
             var services = new ServiceCollection();
             services.AddDbContext<ApplicationDbContext>(options =>
@@ -32,6 +32,12 @@ namespace IssuerApp
             {
                 try
                 {
+                    if (!isDevelopment)
+                    {
+                        await context.Database.EnsureDeletedAsync();
+                        Log.Information("Database deleted for fresh seed.");
+                    }
+
                     Log.Information("Running database migrations...");
                     try
                     {

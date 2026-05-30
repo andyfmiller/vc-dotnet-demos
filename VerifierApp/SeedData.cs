@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -10,7 +9,7 @@ namespace VerifierApp
 {
     public static class SeedData
     {
-        public static async Task EnsureUserSeedData(string connectionString)
+        public static async Task EnsureUserSeedData(string connectionString, bool isDevelopment)
         {
             var services = new ServiceCollection();
             services.AddDbContext<ApplicationDbContext>(options =>
@@ -32,6 +31,13 @@ namespace VerifierApp
             {
                 try
                 {
+                    if (!isDevelopment)
+                    {
+                        await context.Database.EnsureDeletedAsync();
+                        Log.Information("Database deleted for fresh seed.");
+                    }
+
+
                     Log.Information("Running database migrations...");
                     await context.Database.MigrateAsync();
                     Log.Information("Database migrations completed.");

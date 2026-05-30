@@ -3,22 +3,15 @@ using IssuerApp.Data;
 using IssuerApp.Data.Models;
 using IssuerApp.Extensions;
 using IssuerApp.Services;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Serilog;
-using System;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
-using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -145,7 +138,7 @@ try
 
     try
     {
-        await SeedData.EnsureUserSeedData(connectionString, didWebHost);
+        await SeedData.EnsureUserSeedData(connectionString, didWebHost, builder.Environment.IsDevelopment());
         Log.Information("Database seeding completed successfully.");
     }
     catch (Exception ex)

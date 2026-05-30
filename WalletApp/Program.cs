@@ -141,7 +141,7 @@ try
 
     try
     {
-        await SeedData.EnsureUserSeedData(connectionString, didWebHost);
+        await SeedData.EnsureUserSeedData(connectionString, didWebHost, builder.Environment.IsDevelopment());
         Log.Information("Default database seeding completed successfully.");
     }
     catch (Exception ex)

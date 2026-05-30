@@ -144,7 +144,7 @@ try
 
     try
     {
-        await SeedData.EnsureUserSeedData(connectionString);
+        await SeedData.EnsureUserSeedData(connectionString, builder.Environment.IsDevelopment());
         Log.Information("Database seeding completed successfully.");
     }
     catch (Exception ex)
