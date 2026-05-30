@@ -3,7 +3,7 @@ name: Deploy IssuerApp to Azure
 on:
   push:
     branches:
-      - develop
+      - main
     paths:
       - 'IssuerApp/**'
       - 'Library/**'
