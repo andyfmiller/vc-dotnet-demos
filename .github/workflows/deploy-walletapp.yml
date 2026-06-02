@@ -1,13 +1,7 @@
 name: Deploy WalletApp to Azure
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'WalletApp/**'
-      - 'Library/**'
-      - '.github/workflows/deploy-walletapp.yml'
+  workflow_call:
   workflow_dispatch:
 
 env:

@@ -1,13 +1,7 @@
 name: Deploy IssuerApp to Azure
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'IssuerApp/**'
-      - 'Library/**'
-      - '.github/workflows/deploy-issuerapp.yml'
+  workflow_call:
   workflow_dispatch:
 
 env:

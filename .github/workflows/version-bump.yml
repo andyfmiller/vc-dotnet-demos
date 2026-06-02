@@ -12,12 +12,27 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: write
+
+    outputs:
+      deploy_wallet: ${{ steps.changed.outputs.deploy_wallet }}
+      deploy_issuer: ${{ steps.changed.outputs.deploy_issuer }}
+      deploy_verifier: ${{ steps.changed.outputs.deploy_verifier }}
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Detect changed paths
+        id: changed
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          echo "$CHANGED"
+          echo "deploy_wallet=$(echo "$CHANGED" | grep -qE '^(WalletApp|Library)/' && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "deploy_issuer=$(echo "$CHANGED" | grep -qE '^(IssuerApp|Library)/' && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "deploy_verifier=$(echo "$CHANGED" | grep -qE '^(VerifierApp|Library)/' && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
 
       - name: Bump patch version in Directory.Build.props
         run: |
@@ -37,3 +52,21 @@ jobs:
           git add Directory.Build.props
           git commit -m "chore: bump version [skip ci]"
           git push
+
+  deploy-wallet:
+    needs: bump-version
+    if: needs.bump-version.outputs.deploy_wallet == 'true'
+    uses: ./.github/workflows/deploy-walletapp.yml
+    secrets: inherit
+
+  deploy-issuer:
+    needs: bump-version
+    if: needs.bump-version.outputs.deploy_issuer == 'true'
+    uses: ./.github/workflows/deploy-issuerapp.yml
+    secrets: inherit
+
+  deploy-verifier:
+    needs: bump-version
+    if: needs.bump-version.outputs.deploy_verifier == 'true'
+    uses: ./.github/workflows/deploy-verifierapp.yml
+    secrets: inherit
