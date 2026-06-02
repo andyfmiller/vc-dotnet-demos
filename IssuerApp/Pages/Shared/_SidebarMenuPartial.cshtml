@@ -1,7 +1,14 @@
 @using IssuerApp
 @using IssuerApp.Data.Models
 @using Microsoft.AspNetCore.Identity
+@using System.Reflection
 @inject UserManager<ApplicationUser> _userManager;
+@{
+    var fullVersion = System.Reflection.Assembly.GetEntryAssembly()
+        ?.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()
+        ?.InformationalVersion ?? "?";
+    var appVersion = fullVersion.Contains('+') ? fullVersion[..fullVersion.IndexOf('+')] : fullVersion;
+}
 
 <div class="sidebar border-top col-md-3 col-lg-2 p-0">
     <div class="offcanvas-md offcanvas-end" tabindex="-1"
@@ -88,6 +95,7 @@
                     </li>
                 }
             </ul>
+            <div class="text-center pb-1 text-light" style="font-size: 0.75em">v@(appVersion)</div>
         </div>
     </div>
 </div>

@@ -1,0 +1,39 @@
+name: Version Bump
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'Directory.Build.props'
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bump patch version in Directory.Build.props
+        run: |
+          FILE="Directory.Build.props"
+          CURRENT=$(grep -oP '(?<=<InformationalVersion>)[^<]+' "$FILE")
+          MAJOR=$(echo "$CURRENT" | cut -d. -f1)
+          MINOR=$(echo "$CURRENT" | cut -d. -f2)
+          NEW_MINOR=$((MINOR + 1))
+          NEW_VERSION="$MAJOR.$NEW_MINOR"
+          sed -i "s|<InformationalVersion>$CURRENT</InformationalVersion>|<InformationalVersion>$NEW_VERSION</InformationalVersion>|" "$FILE"
+          echo "Bumped version from $CURRENT to $NEW_VERSION"
+
+      - name: Commit updated version
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Directory.Build.props
+          git commit -m "chore: bump version [skip ci]"
+          git push
