@@ -4,6 +4,13 @@ A reference implementation of a complete **Verifiable Credentials ecosystem** bu
 
 The suite demonstrates how three independent web applications — an Issuer, a Wallet, and a Verifier — cooperate using open standards to issue, hold, and present digitally-signed credentials.
 
+## Public Apps are available at:
+- IssuerApp: https://vcdemos-issuer.azurewebsites.net
+- WalletApp: https://vcdemos-wallet.azurewebsites.net
+- VerifierApp: https://vcdemos-verifier.azurewebsites.net
+
+It may take a minute or two for the apps to wake up if they haven't been used recently. They all have seeded demo data, so you can jump right in and start issuing and verifying credentials! Use the DEMO TOOLS menu to change your role as appropriate for each workflow.
+
 ---
 
 ## Standards implemented
