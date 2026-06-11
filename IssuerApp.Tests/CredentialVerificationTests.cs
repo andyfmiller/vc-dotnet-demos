@@ -2,10 +2,14 @@ using IssuerApp.Data;
 using IssuerApp.Data.Models.OpenBadges;
 using IssuerApp.Services;
 using Library.Crypto;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -151,6 +155,102 @@ namespace IssuerApp.Integration.Tests
             }
         }
 
+        private static async Task<(WebApplication host, string statusListCredentialUrl)> StartStatusListHostAsync(
+            IStatusListService statusListService,
+            IEd25519SigningService signingService,
+            IJsonLdCanonicalizationService canonicalizationService,
+            string publicKeyMultibase,
+            string privateKeyBase64)
+        {
+            var port = GetFreeTcpPort();
+            var baseUrl = $"http://127.0.0.1:{port}";
+            var statusListCredentialUrl = $"{baseUrl}/status-lists/1";
+            var didKey = $"did:key:{publicKeyMultibase}";
+            var verificationMethod = $"{didKey}#{publicKeyMultibase}";
+            var created = DateTimeOffset.UtcNow;
+
+            var statusListCredential = new Dictionary<string, object>
+            {
+                ["@context"] = new[]
+                {
+                    "https://www.w3.org/ns/credentials/v2",
+                    "https://www.w3.org/ns/credentials/status/v1"
+                },
+                ["id"] = statusListCredentialUrl,
+                ["type"] = new[] { "VerifiableCredential", "BitstringStatusListCredential" },
+                ["issuer"] = didKey,
+                ["validFrom"] = created.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                ["credentialSubject"] = new Dictionary<string, object>
+                {
+                    ["id"] = statusListCredentialUrl + "#list",
+                    ["type"] = "BitstringStatusList",
+                    ["statusPurpose"] = "revocation",
+                    ["encodedList"] = statusListService.GetEncodedStatusList()
+                }
+            };
+
+            var statusListCredentialForSigning = new Dictionary<string, object>(statusListCredential)
+            {
+                ["@context"] = new[] { "https://www.w3.org/ns/credentials/v2" }
+            };
+
+            var proofOptions = new Dictionary<string, object>
+            {
+                ["@context"] = new[] { "https://www.w3.org/ns/credentials/v2" },
+                ["type"] = "DataIntegrityProof",
+                ["cryptosuite"] = "eddsa-rdfc-2022",
+                ["created"] = created.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                ["verificationMethod"] = verificationMethod,
+                ["proofPurpose"] = "assertionMethod"
+            };
+
+            var credentialBytes = canonicalizationService.Canonicalize(JsonSerializer.Serialize(statusListCredentialForSigning));
+            var proofOptionsBytes = canonicalizationService.Canonicalize(JsonSerializer.Serialize(proofOptions));
+            var proofInput = new byte[32 + 32];
+            SHA256.HashData(proofOptionsBytes).CopyTo(proofInput, 0);
+            SHA256.HashData(credentialBytes).CopyTo(proofInput, 32);
+
+            statusListCredential["proof"] = new Dictionary<string, object>
+            {
+                ["type"] = "DataIntegrityProof",
+                ["cryptosuite"] = "eddsa-rdfc-2022",
+                ["created"] = created.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                ["verificationMethod"] = verificationMethod,
+                ["proofPurpose"] = "assertionMethod",
+                ["proofValue"] = signingService.Sign(privateKeyBase64, proofInput)
+            };
+
+            var builder = WebApplication.CreateBuilder();
+            builder.WebHost.UseUrls(baseUrl);
+
+            var app = builder.Build();
+            app.MapGet("/status-lists/1", () => Results.Json(statusListCredential));
+
+            await app.StartAsync(TestContext.Current.CancellationToken);
+            return (app, statusListCredentialUrl);
+        }
+
+        private static int GetFreeTcpPort()
+        {
+            using var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+            return ((IPEndPoint)listener.LocalEndpoint).Port;
+        }
+
+        private static async Task<HttpResponseMessage> PostJsonWithHostAsync(
+            HttpClient client,
+            string requestUri,
+            string json,
+            string host)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, requestUri)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+            request.Headers.Host = host;
+            return await client.SendAsync(request, TestContext.Current.CancellationToken);
+        }
+
         // ------------------------------------------------------------------
         // Tests
         // ------------------------------------------------------------------
@@ -281,9 +381,24 @@ namespace IssuerApp.Integration.Tests
             using var scope = _factory.Services.CreateScope();
             var (_, exchangeId, holderPublicKeyMultibase, holderPrivateKeyBase64) =
                 await SeedCredentialAndExchangeAsync(scope);
-
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var statusListService = scope.ServiceProvider.GetRequiredService<IStatusListService>();
             var signingService = scope.ServiceProvider.GetRequiredService<IEd25519SigningService>();
             var canonicalizationService = scope.ServiceProvider.GetRequiredService<IJsonLdCanonicalizationService>();
+            var organization = await db.Organizations.FindAsync(1)
+                ?? throw new InvalidOperationException("Organization with key 1 not found in test database.");
+            var publicKeyMultibase = organization.SigningPublicKeyMultibase
+                ?? throw new InvalidOperationException("Organization signing public key not found.");
+            var privateKeyBase64 = organization.SigningPrivateKeyBase64
+                ?? throw new InvalidOperationException("Organization signing private key not found.");
+            var (statusListHost, statusListCredentialUrl) = await StartStatusListHostAsync(
+                statusListService,
+                signingService,
+                canonicalizationService,
+                publicKeyMultibase,
+                privateKeyBase64);
+            await using var _ = statusListHost;
+            var statusListHostAuthority = new Uri(statusListCredentialUrl).Authority;
 
             var workflowId = "default";
             var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
@@ -292,10 +407,11 @@ namespace IssuerApp.Integration.Tests
             });
 
             // Round-trip 1: get DIDAuthentication VPR.
-            var rt1Response = await client.PostAsync(
+            var rt1Response = await PostJsonWithHostAsync(
+                client,
                 $"/workflows/{workflowId}/exchanges/{exchangeId}",
-                new StringContent("{}", Encoding.UTF8, "application/json"),
-                TestContext.Current.CancellationToken);
+                "{}",
+                statusListHostAuthority);
             rt1Response.EnsureSuccessStatusCode();
             var rt1Json = await rt1Response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
             using var rt1Doc = JsonDocument.Parse(rt1Json);
@@ -333,12 +449,12 @@ namespace IssuerApp.Integration.Tests
             var vpFull = new Dictionary<string, object>(vpNoProof) { ["proof"] = proofDict };
 
             // Round-trip 2: send DIDAuth VP and receive credential.
-            var issueResponse = await client.PostAsync(
+            var issueResponse = await PostJsonWithHostAsync(
+                client,
                 $"/workflows/{workflowId}/exchanges/{exchangeId}",
-                new StringContent(JsonSerializer.Serialize(new Dictionary<string, object>
+                JsonSerializer.Serialize(new Dictionary<string, object>
                 { ["verifiablePresentation"] = vpFull }),
-                    Encoding.UTF8, "application/json"),
-                TestContext.Current.CancellationToken);
+                statusListHostAuthority);
 
             issueResponse.EnsureSuccessStatusCode();
             var vpJson = await issueResponse.Content.ReadAsStringAsync(
@@ -347,7 +463,6 @@ namespace IssuerApp.Integration.Tests
             // Extract the verifiablePresentation from the server message wrapper.
             using var serverMsg = JsonDocument.Parse(vpJson);
             var vpElement = serverMsg.RootElement.GetProperty("verifiablePresentation");
-            var vpJsonString = vpElement.GetRawText();
 
             // POST the VC to the 1EdTech validator as multipart/form-data.
             // Endpoint: POST /api/validate?validatorId=OB30Inspector

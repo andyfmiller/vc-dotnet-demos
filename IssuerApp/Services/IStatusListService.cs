@@ -32,7 +32,7 @@ namespace IssuerApp.Services
         bool IsRevoked(int index);
 
         /// <summary>
-        /// Returns the GZIP-compressed, base64url-encoded bitstring as required by the spec.
+        /// Returns the GZIP-compressed bitstring encoded as base64url multibase.
         /// The string is suitable for the <c>encodedList</c> property of a
         /// <c>BitstringStatusListCredential</c>.
         /// </summary>

@@ -12,7 +12,8 @@ namespace IssuerApp.Services
     ///
     /// The list is serialised as:
     ///   1. GZIP-compress the raw byte array.
-    ///   2. Base64url-encode without padding — the <c>encodedList</c> value.
+    ///   2. Base64url-encode without padding and prefix with multibase code <c>u</c>
+    ///      — the <c>encodedList</c> value.
     ///
     /// Registered as a singleton so the list survives across requests.
     /// </summary>
@@ -110,8 +111,8 @@ namespace IssuerApp.Services
                 gzip.Write(snapshot, 0, snapshot.Length);
             }
 
-            // Base64url without padding (spec §4.1)
-            return Convert.ToBase64String(output.ToArray())
+            // Base64url multibase without padding (spec §4.1)
+            return "u" + Convert.ToBase64String(output.ToArray())
                 .Replace('+', '-')
                 .Replace('/', '_')
                 .TrimEnd('=');

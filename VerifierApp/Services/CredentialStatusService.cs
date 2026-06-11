@@ -138,7 +138,12 @@ namespace VerifierApp.Services
                 encodedListEl.GetString() is not { Length: > 0 } encodedList)
                 return null;
 
-            // Reverse base64url → base64 → decode → gunzip
+            // Reverse base64url multibase → base64 → decode → gunzip
+            if (encodedList.StartsWith('u'))
+            {
+                encodedList = encodedList[1..];
+            }
+
             var base64 = encodedList.Replace('-', '+').Replace('_', '/');
             // Add padding if needed
             base64 = (base64.Length % 4) switch
